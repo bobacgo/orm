@@ -2,15 +2,21 @@ package orm
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
-	"log/slog"
 	"strings"
-	"testing"
 )
 
 type Delete struct {
 	dbCommon
 	where []string // 查询条件
+}
+
+func DELETE() *Delete {
+	del := &Delete{
+		dbCommon: dbCommon{},
+	}
+	return del
 }
 
 func (d *Delete) FROM(table string) *Delete {
@@ -38,22 +44,14 @@ func (d *Delete) SQL() error {
 	return nil
 }
 
-func (d *Delete) Exec(ctx context.Context) (int64, error) {
+func (d *Delete) Exec(ctx context.Context, db *sql.DB) (int64, error) {
 	if err := d.SQL(); err != nil {
 		return 0, err
 	}
 	d.debugPrint(ctx)
-	res, err := d.db.ExecContext(ctx, d.sql, d.args...)
+	res, err := db.ExecContext(ctx, d.sql, d.args...)
 	if err != nil {
 		return 0, fmt.Errorf("db..Exec: %w", err)
 	}
 	return res.RowsAffected()
-}
-
-func TestDelete(t *testing.T) {
-	// DELETE FROM xxx WHERE a = 1
-	_, err := DB[TestModel](nil).Debug().DELETE().FROM("xxx").WHERE(map[string]any{"a": 1}).Exec(context.Background())
-	if err != nil {
-		slog.Error("delete:", "err", err)
-	}
 }

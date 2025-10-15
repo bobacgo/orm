@@ -2,22 +2,33 @@ package orm
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
-	"log/slog"
 	"strings"
-	"testing"
 )
 
-type Insert struct {
+type Insert[T Model] struct {
 	dbCommon
 
 	cols []string // 查询字段
 	size int      // 插入数据条数
 }
 
+func INSERT[T Model](rows ...T) *Insert[T] {
+	insert := &Insert[T]{
+		dbCommon: dbCommon{},
+	}
+	insert.insert(rows)
+	return insert
+}
+
+func INSERT1() *Insert[*emptyModel] {
+	return INSERT[*emptyModel]()
+}
+
 // insert into ab (a, b) values (?, ?)
 
-func (d *Insert) insert(rows []Model) {
+func (d *Insert[T]) insert(rows []T) {
 	switch len(rows) {
 	case 1:
 		d.size = 1
@@ -46,12 +57,12 @@ func (d *Insert) insert(rows []Model) {
 	}
 }
 
-func (d *Insert) INTO(table string) *Insert {
+func (d *Insert[T]) INTO(table string) *Insert[T] {
 	d.table = table
 	return d
 }
 
-func (d *Insert) COLUMNS(cols ...string) *Insert {
+func (d *Insert[T]) COLUMNS(cols ...string) *Insert[T] {
 	if d.size != 0 {
 		d.err = fmt.Errorf("columns and models can only be used once")
 		return d
@@ -64,7 +75,7 @@ func (d *Insert) COLUMNS(cols ...string) *Insert {
 	return d
 }
 
-func (d *Insert) VALUES(args ...any) *Insert {
+func (d *Insert[T]) VALUES(args ...any) *Insert[T] {
 	if d.size != 0 {
 		d.err = fmt.Errorf("columns and models can only be used once")
 		return d
@@ -78,19 +89,19 @@ func (d *Insert) VALUES(args ...any) *Insert {
 	return d
 }
 
-func (d *Insert) Exec(ctx context.Context) (int64, error) {
-	if _, err := d.Builder(); err != nil {
+func (d *Insert[T]) Exec(ctx context.Context, db *sql.DB) (int64, error) {
+	if _, err := d.SQL(); err != nil {
 		return 0, err
 	}
 	d.debugPrint(ctx)
-	res, err := d.db.ExecContext(ctx, d.sql, d.args...)
+	res, err := db.ExecContext(ctx, d.sql, d.args...)
 	if err != nil {
 		return 0, fmt.Errorf("db.Exec: %w", err)
 	}
 	return res.LastInsertId()
 }
 
-func (d *Insert) Builder() (string, error) {
+func (d *Insert[T]) SQL() (string, error) {
 	if d.err != nil {
 		return "", d.err
 	}
@@ -106,34 +117,10 @@ func (d *Insert) Builder() (string, error) {
 	return d.sql, nil
 }
 
-func (d *Insert) Print(ctx context.Context) error {
+func (d *Insert[T]) Print(ctx context.Context) error {
 	if d.err != nil {
 		return d.err
 	}
-	d.Builder()
+	d.SQL()
 	return d.print(ctx)
-}
-
-func TestInsert(t *testing.T) {
-	// INSERT INTO ab (a, b) VALUES (?, ?)
-	err := DB[TestModel](nil).INSERT().INTO("ab").COLUMNS("a", "b").VALUES(1, 2).Print(context.Background())
-	if err != nil {
-		slog.Error("insert:", "err", err)
-	}
-}
-
-func TestInsertModel(t *testing.T) {
-	// INSERT INTO ab (a, b) VALUES (?, ?)
-	err := DB[TestModel](nil).Debug().INSERT(&TestModel{}).INTO("xxx").Print(context.Background())
-	if err != nil {
-		slog.Error("insert:", "err", err)
-	}
-}
-
-func TestInsertModels(t *testing.T) {
-	// INSERT INTO ab (a, b) VALUES (?, ?), (?, ?)
-	err := DB[TestModel](nil).Debug().INSERT(&TestModel{}, &TestModel{}).INTO("xxx").Print(context.Background())
-	if err != nil {
-		slog.Error("insert:", "err", err)
-	}
 }

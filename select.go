@@ -2,12 +2,12 @@ package orm
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
 	"strconv"
 	"strings"
-	"testing"
 )
 
 type Select[T any, P PModel[T]] struct {
@@ -70,7 +70,7 @@ func (d *Select[T, P]) OFFSET(offset int64) *Select[T, P] {
 }
 
 // 查到单个
-func (d *Select[T, P]) QueryRow(ctx context.Context) error {
+func (d *Select[T, P]) QueryRow(ctx context.Context, db *sql.DB) error {
 	if d.err != nil {
 		return d.err
 	}
@@ -78,11 +78,11 @@ func (d *Select[T, P]) QueryRow(ctx context.Context) error {
 	if d.debug {
 		slog.InfoContext(ctx, "sql text", "sql", sqlText, "args", d.args)
 	}
-	return d.db.QueryRowContext(ctx, sqlText, d.args...).Scan(d.res...)
+	return db.QueryRowContext(ctx, sqlText, d.args...).Scan(d.res...)
 }
 
 // 查询多个
-func (d *Select[T, P]) Query(ctx context.Context) error {
+func (d *Select[T, P]) Query(ctx context.Context, db *sql.DB) error {
 	if d.err != nil {
 		return d.err
 	}
@@ -91,7 +91,7 @@ func (d *Select[T, P]) Query(ctx context.Context) error {
 	if d.debug {
 		slog.InfoContext(ctx, "sql text", "sql", sqlText, "args", d.args)
 	}
-	rows, err := d.db.QueryContext(ctx, sqlText, d.args...)
+	rows, err := db.QueryContext(ctx, sqlText, d.args...)
 	if err != nil {
 		return fmt.Errorf("stmt.Query: %w", err)
 	}
@@ -132,36 +132,4 @@ func (d *Select[T, P]) SQL() string {
 	}
 
 	return sb.String()
-}
-
-func TestSelectOne(t *testing.T) {
-	// SELECT a, b FROM xx WHERE id = 1 GROUP BY a HAVING a > 0 ORDER BY a desc, b LIMIT 1, 1
-	row := new(TestModel)
-	err := DB[TestModel](nil).Debug().SELECT(row).
-		FROM("xx").
-		WHERE(map[string]any{"AND id = ?": 1}).
-		GROUP_BY("a").
-		HAVING("a > 0").
-		ORDER_BY("a desc", "b").
-		OFFSET(1).LIMIT(1).
-		QueryRow(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestSelectMany(t *testing.T) {
-	// SELECT a, b FROM xx WHERE id = 1 GROUP BY a HAVING a > 0 ORDER BY a desc, b LIMIT 1, 1
-	rows := make([]*TestModel, 0)
-	err := DB[TestModel](nil).Debug().SELECT1(&rows).
-		FROM("xx").
-		WHERE(map[string]any{"AND id = ?": 1}).
-		GROUP_BY("a").
-		HAVING("a > 0").
-		ORDER_BY("a desc", "b").
-		OFFSET(1).LIMIT(1).
-		QueryRow(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
 }
