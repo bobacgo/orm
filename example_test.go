@@ -25,7 +25,7 @@ func TestSelectModel(t *testing.T) {
 	// SELECT a, b FROM xx WHERE id = 1 GROUP BY a HAVING a > 0 ORDER BY a desc, b LIMIT 1, 1
 	sqlText := SELECT(row).FROM("xx").WHERE(map[string]any{"AND id = ?": 1}).
 		GROUP_BY("a").HAVING("a > 0").ORDER_BY("a desc", "b").OFFSET(1).LIMIT(1).
-		SQL()
+		Query(context.Background(), db)
 	fmt.Println(sqlText)
 }
 
@@ -34,16 +34,15 @@ func TestSelectModels(t *testing.T) {
 	// SELECT a, b FROM xx WHERE id = 1 GROUP BY a HAVING a > 0 ORDER BY a desc, b LIMIT 1, 1
 	sqlText := SELECT1(&rows).FROM("xx").WHERE(map[string]any{"AND id = ?": 1}).
 		GROUP_BY("a").HAVING("a > 0").ORDER_BY("a desc", "b").OFFSET(1).LIMIT(1).
-		SQL()
+		Query(context.Background(), db)
 	fmt.Println(sqlText)
 }
 
 func TestSelectString(t *testing.T) {
 	// SELECT a, b FROM xx WHERE id = 1 GROUP BY a HAVING a > 0 ORDER BY a desc, b LIMIT 1, 1
 	sqlText := SELECT2("a", "b").FROM("xx").WHERE(map[string]any{"AND id = ?": 1}).
-		GROUP_BY("a").HAVING("a > 0").ORDER_BY("a desc", "b").OFFSET(1).LIMIT(1).
-		SQL()
-	fmt.Println(sqlText)
+		GROUP_BY("a").HAVING("a > 0").ORDER_BY("a desc", "b").OFFSET(1).LIMIT(1)
+	fmt.Println(sqlText.sql)
 }
 
 func TestInsert(t *testing.T) {

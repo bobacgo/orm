@@ -1,18 +1,39 @@
 package orm
 
+import (
+	"context"
+	"database/sql"
+	"log/slog"
+	"strings"
+)
+
 type SelectModel struct {
-	*Select[emptyModel, *emptyModel]
+	*selec[SelectModel]
 }
 
-func SELECT(row Model) SelectModel {
-	slect := SelectModel{
-		&Select[emptyModel, *emptyModel]{
+func SELECT(row Model) *SelectModel {
+	s := &SelectModel{
+		&selec[SelectModel]{
 			dbCommon: dbCommon{}, // TODO
 		},
 	}
+	var cols []string
 	for _, v := range row.Mapping() {
-		slect.cols = append(slect.cols, v.Column)
-		slect.res = append(slect.res, v.Result)
+		cols = append(cols, v.Column)
+		s.res = append(s.res, v.Result)
 	}
-	return slect
+	s.setT(s)
+	s.sql = "SELECT " + strings.Join(cols, ", ")
+	return s
+}
+
+func (d *SelectModel) Query(ctx context.Context, db *sql.DB) error {
+	if d.err != nil {
+		return d.err
+	}
+	sqlText := d.sql
+	if d.debug {
+		slog.InfoContext(ctx, "sql text", "sql", sqlText, "args", d.args)
+	}
+	return db.QueryRowContext(ctx, sqlText, d.args...).Scan(d.res...)
 }

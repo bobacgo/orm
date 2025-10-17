@@ -1,14 +1,18 @@
 package orm
 
+import "strings"
+
 type SelectString struct {
-	*Select[emptyModel, *emptyModel]
+	*selec[SelectString]
 }
 
-func SELECT2(cols ...string) SelectString {
-	return SelectString{
-		&Select[emptyModel, *emptyModel]{
+func SELECT2(cols ...string) *SelectString {
+	s := &SelectString{
+		&selec[SelectString]{
 			dbCommon: dbCommon{},
-			cols:     cols,
-		},
-	}
+		}}
+	s.setT(s)
+
+	s.sql = "SELECT " + strings.Join(cols, ", ")
+	return s
 }
