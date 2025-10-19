@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log/slog"
 	"strings"
 )
 
@@ -22,6 +21,11 @@ func UPDATE(tableName string) *Update {
 		},
 	}
 	return update
+}
+
+func (d *Update) Debug() *Update {
+	d.debug = true
+	return d
 }
 
 func (d *Update) SET(set map[string]any) *Update {
@@ -66,6 +70,9 @@ func (d *Update) SET1(row Model) *Update {
 }
 
 func (d *Update) WHERE(where map[string]any) *Update {
+	if len(where) > 0 {
+		d.where = append(d.where, "1 = 1")
+	}
 	for k, v := range where {
 		d.where = append(d.where, k)
 		d.args = append(d.args, v)
@@ -73,17 +80,29 @@ func (d *Update) WHERE(where map[string]any) *Update {
 	return d
 }
 
+func (d *Update) SQL() string {
+	sqlText := "UPDATE " + d.table + " SET " + strings.Join(d.cols, " = ?, ") + " = ? WHERE " + strings.Join(d.where, " ")
+	return sqlText
+}
+
 func (d *Update) Exec(ctx context.Context, db *sql.DB) (int64, error) {
 	if d.err != nil {
 		return 0, d.err
 	}
-	sqlText := "UPDATE " + d.table + " SET " + strings.Join(d.cols, " = ?, ") + " = ? WHERE " + strings.TrimLeft(strings.Join(d.where, " "), "AND ")
-	if d.debug {
-		slog.InfoContext(ctx, "sql text", "sql", sqlText, "args", d.args)
-	}
+	sqlText := d.SQL()
+	d.debugPrint(ctx, sqlText)
 	res, err := db.ExecContext(ctx, sqlText, d.args...)
 	if err != nil {
 		return 0, fmt.Errorf("db.Exec: %w", err)
 	}
 	return res.RowsAffected()
+}
+
+func (d *Update) DryRun(ctx context.Context) (int64, error) {
+	if d.err != nil {
+		return 0, d.err
+	}
+	sqlText := d.SQL()
+	d.print(ctx, sqlText)
+	return 0, nil
 }

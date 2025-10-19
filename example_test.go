@@ -8,6 +8,26 @@ import (
 	"testing"
 )
 
+type TestModel struct {
+	ID int
+	A  string
+	B  int
+	C  string
+}
+
+//func (m *TestModel) TableName() string {
+//	return "test_model"
+//}
+
+func (m *TestModel) Mapping() []*Mapping {
+	return []*Mapping{
+		{"id", &m.ID, m.ID},
+		{"a", &m.A, m.A},
+		{"b", &m.B, m.B},
+		{"c", &m.C, m.C},
+	}
+}
+
 var db *sql.DB
 
 func init() {
@@ -25,7 +45,8 @@ func TestSelectModel(t *testing.T) {
 	// SELECT a, b FROM xx WHERE id = 1 GROUP BY a HAVING a > 0 ORDER BY a desc, b LIMIT 1, 1
 	sqlText := SELECT(row).FROM("xx").WHERE(map[string]any{"AND id = ?": 1}).
 		GROUP_BY("a").HAVING("a > 0").ORDER_BY("a desc", "b").OFFSET(1).LIMIT(1).
-		Query(context.Background(), db)
+		//Query(context.Background(), db)
+		DryRun(context.Background())
 	fmt.Println(sqlText)
 }
 
@@ -41,13 +62,13 @@ func TestSelectModels(t *testing.T) {
 func TestSelectString(t *testing.T) {
 	// SELECT a, b FROM xx WHERE id = 1 GROUP BY a HAVING a > 0 ORDER BY a desc, b LIMIT 1, 1
 	sqlText := SELECT2("a", "b").FROM("xx").WHERE(map[string]any{"AND id = ?": 1}).
-		GROUP_BY("a").HAVING("a > 0").ORDER_BY("a desc", "b").OFFSET(1).LIMIT(1)
-	fmt.Println(sqlText.sql)
+		GROUP_BY("a").HAVING("a > 0").ORDER_BY("a desc", "b").OFFSET(1).LIMIT(1).SQL()
+	fmt.Println(sqlText)
 }
 
 func TestInsert(t *testing.T) {
 	// INSERT INTO ab (a, b) VALUES (?, ?)
-	err := INSERT1().INTO("ab").COLUMNS("a", "b").VALUES(1, 2).Print(context.Background())
+	_, err := INSERT1().INTO("ab").COLUMNS("a", "b").VALUES(1, 2).DryRun(context.Background())
 	if err != nil {
 		slog.Error("insert:", "err", err)
 	}
@@ -55,7 +76,7 @@ func TestInsert(t *testing.T) {
 
 func TestInsertModel(t *testing.T) {
 	// INSERT INTO ab (a, b) VALUES (?, ?)
-	err := INSERT(&TestModel{}).INTO("xxx").Print(context.Background())
+	_, err := INSERT(&TestModel{}).INTO("xxx").DryRun(context.Background())
 	if err != nil {
 		slog.Error("insert:", "err", err)
 	}
@@ -63,7 +84,7 @@ func TestInsertModel(t *testing.T) {
 
 func TestInsertModels(t *testing.T) {
 	// INSERT INTO ab (a, b) VALUES (?, ?), (?, ?)
-	err := INSERT(&TestModel{}, &TestModel{}).INTO("xxx").Print(context.Background())
+	_, err := INSERT(&TestModel{}, &TestModel{}).INTO("xxx").DryRun(context.Background())
 	if err != nil {
 		slog.Error("insert:", "err", err)
 	}

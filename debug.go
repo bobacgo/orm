@@ -7,11 +7,7 @@ import (
 	"strings"
 )
 
-func (c *dbCommon) print(ctx context.Context) error {
-	if c.err != nil {
-		return c.err
-	}
-	sqlText := c.sql
+func (c *dbCommon) print(ctx context.Context, sqlText string) {
 	for _, arg := range c.args {
 		switch v := arg.(type) {
 		case int, int8, int16, int32, int64:
@@ -29,12 +25,11 @@ func (c *dbCommon) print(ctx context.Context) error {
 		}
 	}
 	slog.InfoContext(ctx, "run sql:", "sql", sqlText)
-	return nil
 }
 
-func (c *dbCommon) debugPrint(ctx context.Context) {
+func (c *dbCommon) debugPrint(ctx context.Context, sqlText string) {
 	if !c.debug {
 		return
 	}
-	slog.InfoContext(ctx, "exec sql:", "sql", c.sql, "args", fmt.Sprintf("%#v", c.args))
+	slog.InfoContext(ctx, "exec sql:", "sql", sqlText, "args", fmt.Sprintf("%#v", c.args))
 }

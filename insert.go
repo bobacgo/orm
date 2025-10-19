@@ -10,8 +10,10 @@ import (
 type Insert[T Model] struct {
 	dbCommon
 
-	cols []string // 查询字段
-	size int      // 插入数据条数
+	cols     []string // 查询字段
+	size     int      // 插入数据条数
+	conflict string
+	updates  []string
 }
 
 func INSERT[T Model](rows ...T) *Insert[T] {
@@ -24,6 +26,11 @@ func INSERT[T Model](rows ...T) *Insert[T] {
 
 func INSERT1() *Insert[*emptyModel] {
 	return INSERT[*emptyModel]()
+}
+
+func (d *Insert[T]) Debug() *Insert[T] {
+	d.debug = true
+	return d
 }
 
 // insert into ab (a, b) values (?, ?)
@@ -89,38 +96,54 @@ func (d *Insert[T]) VALUES(args ...any) *Insert[T] {
 	return d
 }
 
-func (d *Insert[T]) Exec(ctx context.Context, db *sql.DB) (int64, error) {
-	if _, err := d.SQL(); err != nil {
-		return 0, err
+func (d *Insert[T]) ON(conflict string) *Insert[T] {
+	d.conflict = conflict
+	return d
+}
+
+func (d *Insert[T]) UPDATE(conds map[string]any) *Insert[T] {
+	for k, v := range conds {
+		d.updates = append(d.updates, k)
+		d.args = append(d.args, v)
 	}
-	d.debugPrint(ctx)
-	res, err := db.ExecContext(ctx, d.sql, d.args...)
+	return d
+}
+
+func (d *Insert[T]) Exec(ctx context.Context, db *sql.DB) (int64, error) {
+	if d.err != nil {
+		return 0, d.err
+	}
+
+	sqlText := d.SQL()
+	d.debugPrint(ctx, sqlText)
+	res, err := db.ExecContext(ctx, sqlText, d.args...)
 	if err != nil {
 		return 0, fmt.Errorf("db.Exec: %w", err)
 	}
 	return res.LastInsertId()
 }
 
-func (d *Insert[T]) SQL() (string, error) {
-	if d.err != nil {
-		return "", d.err
-	}
+func (d *Insert[T]) SQL() string {
 	var builder strings.Builder
 	builder.WriteString("INSERT INTO " + d.table + " (" + strings.Join(d.cols, ", ") + ") VALUES ")
+	if d.conflict != "" {
+		builder.WriteString("ON" + d.conflict + " UPDATE ")
+		builder.WriteString(strings.Join(d.updates, ", "))
+	}
 	for i := range d.size {
 		builder.WriteString("(" + strings.Repeat("?, ", len(d.cols)-1) + "?)")
 		if i < d.size-1 {
 			builder.WriteString(", ")
 		}
 	}
-	d.sql = builder.String()
-	return d.sql, nil
+	return builder.String()
 }
 
-func (d *Insert[T]) Print(ctx context.Context) error {
+func (d *Insert[T]) DryRun(ctx context.Context) (int64, error) {
 	if d.err != nil {
-		return d.err
+		return 0, d.err
 	}
-	d.SQL()
-	return d.print(ctx)
+	sqlText := d.SQL()
+	d.print(ctx, sqlText)
+	return 0, nil
 }

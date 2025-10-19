@@ -19,6 +19,11 @@ func DELETE() *Delete {
 	return del
 }
 
+func (d *Delete) Debug() *Delete {
+	d.debug = true
+	return d
+}
+
 func (d *Delete) FROM(table string) *Delete {
 	// 检查 table 是否为空
 	if table == "" {
@@ -29,6 +34,9 @@ func (d *Delete) FROM(table string) *Delete {
 }
 
 func (d *Delete) WHERE(where map[string]any) *Delete {
+	if len(where) > 0 {
+		d.where = append(d.where, "1 = 1")
+	}
 	for k, v := range where {
 		d.where = append(d.where, k)
 		d.args = append(d.args, v)
@@ -36,22 +44,29 @@ func (d *Delete) WHERE(where map[string]any) *Delete {
 	return d
 }
 
-func (d *Delete) SQL() error {
-	if d.err != nil {
-		return d.err
-	}
-	d.sql = "DELETE FROM " + d.table + " WHERE " + strings.TrimLeft(strings.Join(d.where, " "), "AND ")
-	return nil
+func (d *Delete) SQL() string {
+	sqlText := "DELETE FROM " + d.table + " WHERE " + strings.Join(d.where, " ")
+	return sqlText
 }
 
 func (d *Delete) Exec(ctx context.Context, db *sql.DB) (int64, error) {
-	if err := d.SQL(); err != nil {
-		return 0, err
+	// 检查是否有错误
+	if d.err != nil {
+		return 0, d.err
 	}
-	d.debugPrint(ctx)
-	res, err := db.ExecContext(ctx, d.sql, d.args...)
+	sqlText := d.SQL()
+	d.debugPrint(ctx, sqlText)
+	res, err := db.ExecContext(ctx, sqlText, d.args...)
 	if err != nil {
 		return 0, fmt.Errorf("db..Exec: %w", err)
 	}
 	return res.RowsAffected()
+}
+func (d *Delete) DryRun(ctx context.Context) (int64, error) {
+	if d.err != nil {
+		return 0, d.err
+	}
+	sqlText := d.SQL()
+	d.print(ctx, sqlText)
+	return 0, nil
 }
