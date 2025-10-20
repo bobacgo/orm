@@ -12,7 +12,7 @@ type SelectModels[T any, P PModel[T]] struct {
 	rows *[]*T
 }
 
-func SELECT1[T any, P PModel[T]](rows *[]*T) *SelectModels[T, P] {
+func SELECT[T any, P PModel[T]](rows *[]*T) *SelectModels[T, P] {
 	s := &SelectModels[T, P]{
 		selec: &selec[SelectModels[T, P]]{
 			dbCommon: dbCommon{},

@@ -43,7 +43,7 @@ func TestSelectModel(t *testing.T) {
 	row := new(TestModel)
 
 	// SELECT a, b FROM xx WHERE id = 1 GROUP BY a HAVING a > 0 ORDER BY a desc, b LIMIT 1, 1
-	sqlText := SELECT(row).FROM("xx").WHERE(map[string]any{"AND id = ?": 1}).
+	sqlText := SELECT1(row).FROM("xx").WHERE(map[string]any{"AND id = ?": 1}).
 		GROUP_BY("a").HAVING("a > 0").ORDER_BY("a desc", "b").OFFSET(1).LIMIT(1).
 		//Query(context.Background(), db)
 		DryRun(context.Background())
@@ -53,7 +53,7 @@ func TestSelectModel(t *testing.T) {
 func TestSelectModels(t *testing.T) {
 	var rows []*TestModel
 	// SELECT a, b FROM xx WHERE id = 1 GROUP BY a HAVING a > 0 ORDER BY a desc, b LIMIT 1, 1
-	sqlText := SELECT1(&rows).FROM("xx").WHERE(map[string]any{"AND id = ?": 1}).
+	sqlText := SELECT(&rows).FROM("xx").WHERE(map[string]any{"AND id = ?": 1}).
 		GROUP_BY("a").HAVING("a > 0").ORDER_BY("a desc", "b").OFFSET(1).LIMIT(1).
 		Query(context.Background(), db)
 	fmt.Println(sqlText)
@@ -63,6 +63,21 @@ func TestSelectString(t *testing.T) {
 	// SELECT a, b FROM xx WHERE id = 1 GROUP BY a HAVING a > 0 ORDER BY a desc, b LIMIT 1, 1
 	sqlText := SELECT2("a", "b").FROM("xx").WHERE(map[string]any{"AND id = ?": 1}).
 		GROUP_BY("a").HAVING("a > 0").ORDER_BY("a desc", "b").OFFSET(1).LIMIT(1).SQL()
+	fmt.Println(sqlText)
+}
+
+func TestSelectCTE(t *testing.T) {
+	cte := WITH("x").AS(
+		SELECT2("a", "b").FROM("table").WHERE(M{"id": 1}).SQL(),
+	).WITH("x2").AS(
+		SELECT2("a", "b").FROM("table").WHERE(M{"id": 1}).SQL(),
+	).WITH("x2").AS(
+		SELECT2("a", "b").FROM("table").WHERE(M{"id": 1}).SQL(),
+	).SQL()
+
+	sqlText := SELECT2("a", "b").FROM("xx").WHERE(map[string]any{"AND id = ?": 1}).
+		GROUP_BY("a").HAVING("a > 0").ORDER_BY("a desc", "b").OFFSET(1).LIMIT(1).
+		CTE(cte).SQL()
 	fmt.Println(sqlText)
 }
 

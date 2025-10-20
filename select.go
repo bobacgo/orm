@@ -13,14 +13,17 @@ type selec[T any] struct {
 	res  []any    // 查询映射结果字段
 	cols []string // 查询字段
 
-	join    []string // 查询语法连接 例如：["JOIN ab"]
-	on      []string // 查询语法连接条件 例如：["ON a.id = ab.id"]
-	where   []string // 查询语法条件 例如：["AND id = ?", "OR account = ?"]
-	groupBy []string
-	having  string
-	orderBy []string
-	limit   int64
-	offset  int64
+	cte      string   // 查询语法公共表达式 例如：["WITH cte AS (SELECT 1)"]
+	joins    []string // 查询语法连接 例如：["JOIN ab"]
+	on       []string // 查询语法连接条件 例如：["a.id = ab.id"]
+	where    []string // 查询语法条件 例如：["AND id = ?", "OR account = ?"]
+	groupBy  []string
+	having   string
+	orderBy  []string // 查询语法排序 例如：["id DESC", "account ASC"]
+	limit    int64
+	offset   int64
+	union    string
+	unionAll string
 }
 
 func (d *selec[T]) setT(t *T) {
@@ -43,31 +46,31 @@ func (d *selec[T]) FROM(table string) *T {
 }
 
 func (d *selec[T]) JOIN(table string) *T {
-	d.join = append(d.join, "JOIN "+table)
+	d.joins = append(d.joins, "JOIN "+table)
 	return d.t
 }
 
 func (d *selec[T]) INNER_JOIN(table string) *T {
-	d.join = append(d.join, "INNER JOIN "+table)
+	d.joins = append(d.joins, "INNER JOIN "+table)
 	return d.t
 }
 
 func (d *selec[T]) LEFT_JOIN(table string) *T {
-	d.join = append(d.join, "LEFT JOIN "+table)
+	d.joins = append(d.joins, "LEFT JOIN "+table)
 	return d.t
 }
 
 func (d *selec[T]) RIGHT_JOIN(table string) *T {
-	d.join = append(d.join, "RIGHT JOIN "+table)
+	d.joins = append(d.joins, "RIGHT JOIN "+table)
 	return d.t
 }
 func (d *selec[T]) FULL_JOIN(table string) *T {
-	d.join = append(d.join, "FULL JOIN "+table)
+	d.joins = append(d.joins, "FULL JOIN "+table)
 	return d.t
 }
 
 func (d *selec[T]) CROSS_JOIN(table string) *T {
-	d.join = append(d.join, "CROSS JOIN "+table)
+	d.joins = append(d.joins, "CROSS JOIN "+table)
 	return d.t
 }
 
@@ -112,16 +115,41 @@ func (d *selec[T]) OFFSET(offset int64) *T {
 	return d.t
 }
 
+func (d *selec[T]) UNION(selet string) *T {
+	d.union = selet
+	return d.t
+}
+
+func (d *selec[T]) UNION_ALL(selet string) *T {
+	d.unionAll = selet
+	return d.t
+}
+
+func (d *selec[T]) CTE(cte string) *T {
+	d.cte = cte
+	return d.t
+}
+
 func (d *selec[T]) SQL() string {
 	var sb strings.Builder
+	// 公共表达式
+	if d.cte != "" {
+		sb.WriteString(d.cte)
+	}
 	// 构建查询语句
 	sb.WriteString("SELECT " + strings.Join(d.cols, ",") + " FROM " + d.table)
-	if len(d.join) > 0 {
-		sb.WriteString(" " + strings.Join(d.join, " ")) // JOIN 语句
+	if len(d.joins) > 0 {
+
+		sb.WriteString(" " + strings.Join(d.joins, " ")) // JOIN 语句
 	}
-	if len(d.on) > 0 {
-		sb.WriteString(" ON " + strings.Join(d.on, " "))
+
+	for i, join := range d.joins {
+		if i < len(d.on) {
+			sb.WriteString(" " + join)
+			sb.WriteString(" ON " + d.on[i])
+		}
 	}
+
 	if len(d.where) > 0 {
 		sb.WriteString(" WHERE " + strings.Join(d.where, " "))
 	}
@@ -139,6 +167,13 @@ func (d *selec[T]) SQL() string {
 	}
 	if d.offset > 0 {
 		sb.WriteString(" OFFSET " + strconv.FormatInt(d.offset, 10))
+	}
+	// UNION 语句
+	if d.union != "" {
+		sb.WriteString(" UNION " + d.union)
+	}
+	if d.unionAll != "" {
+		sb.WriteString(" UNION ALL " + d.unionAll)
 	}
 
 	return sb.String()

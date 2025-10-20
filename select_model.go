@@ -9,7 +9,7 @@ type SelectModel struct {
 	*selec[SelectModel]
 }
 
-func SELECT(row Model) *SelectModel {
+func SELECT1(row Model) *SelectModel {
 	s := &SelectModel{
 		&selec[SelectModel]{
 			dbCommon: dbCommon{},
