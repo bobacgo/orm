@@ -9,11 +9,11 @@ type number interface {
 }
 
 type count[T number] struct {
-	v   sql.Null[T]
+	v   *sql.Null[T]
 	col string
 }
 
-func COUNT[T number](col string, v sql.Null[T]) *count[T] {
+func COUNT[T number](col string, v *sql.Null[T]) *count[T] {
 	return &count[T]{
 		v:   v,
 		col: "COUNT(" + col + ")",
@@ -30,11 +30,11 @@ func (c *count[T]) Mapping() []*Mapping {
 }
 
 type sum[T number] struct {
-	v   sql.Null[T]
+	v   *sql.Null[T]
 	col string
 }
 
-func SUM[T number](col string, v sql.Null[T]) *sum[T] {
+func SUM[T number](col string, v *sql.Null[T]) *sum[T] {
 	return &sum[T]{
 		v:   v,
 		col: "SUM(" + col + ")",
@@ -51,11 +51,11 @@ func (s *sum[T]) Mapping() []*Mapping {
 }
 
 type avg[T number] struct {
-	v   sql.Null[T]
+	v   *sql.Null[T]
 	col string
 }
 
-func AVG[T number](col string, v sql.Null[T]) *avg[T] {
+func AVG[T number](col string, v *sql.Null[T]) *avg[T] {
 	return &avg[T]{
 		v:   v,
 		col: "AVG(" + col + ")",
@@ -71,11 +71,11 @@ func (a *avg[T]) Mapping() []*Mapping {
 }
 
 type min[T number] struct {
-	v   sql.Null[T]
+	v   *sql.Null[T]
 	col string
 }
 
-func MIN[T number](col string, v sql.Null[T]) *min[T] {
+func MIN[T number](col string, v *sql.Null[T]) *min[T] {
 	return &min[T]{
 		v:   v,
 		col: "MIN(" + col + ")",
@@ -91,11 +91,11 @@ func (m *min[T]) Mapping() []*Mapping {
 }
 
 type max[T number] struct {
-	v   sql.Null[T]
+	v   *sql.Null[T]
 	col string
 }
 
-func MAX[T number](col string, v sql.Null[T]) *max[T] {
+func MAX[T number](col string, v *sql.Null[T]) *max[T] {
 	return &max[T]{
 		v:   v,
 		col: "MAX(" + col + ")",
