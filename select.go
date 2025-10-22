@@ -138,14 +138,10 @@ func (d *selec[T]) SQL() string {
 	}
 	// 构建查询语句
 	sb.WriteString("SELECT " + strings.Join(d.cols, ",") + " FROM " + d.table)
-	if len(d.joins) > 0 {
-
-		sb.WriteString(" " + strings.Join(d.joins, " ")) // JOIN 语句
-	}
 
 	for i, join := range d.joins {
+		sb.WriteString(" " + join)
 		if i < len(d.on) {
-			sb.WriteString(" " + join)
 			sb.WriteString(" ON " + d.on[i])
 		}
 	}
