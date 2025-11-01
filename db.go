@@ -10,7 +10,6 @@ type dbCommon struct {
 }
 
 type M map[string]any
-
 type Mapping struct {
 	Column string
 	Result any
