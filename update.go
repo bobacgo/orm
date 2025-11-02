@@ -48,10 +48,6 @@ func (d *Update) SET1(row Model) *Update {
 	}
 
 	mapping := row.Mapping()
-	var (
-		columns = make([]string, 0, len(mapping))
-		values  = make([]any, 0, len(mapping))
-	)
 	for _, v := range mapping {
 		if v.Column == "id" {
 			continue
@@ -59,11 +55,11 @@ func (d *Update) SET1(row Model) *Update {
 		//if util.IsZero(v.Value) {
 		//	continue
 		//}
-		columns = append(columns, v.Column+" = ?")
-		values = append(values, v.Value)
+		d.cols = append(d.cols, v.Column)
+		d.args = append(d.args, v.Value)
 	}
 
-	if len(columns) == 0 { // 没有更新字段
+	if len(d.cols) == 0 { // 没有更新字段
 		return d
 	}
 	return d
