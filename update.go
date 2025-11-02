@@ -28,6 +28,7 @@ func (d *Update) Debug() *Update {
 	return d
 }
 
+// 不需要占位符的 SET 方法
 func (d *Update) SET(set map[string]any) *Update {
 	if len(set) == 0 {
 		d.err = errors.New("empty set")

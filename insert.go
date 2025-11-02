@@ -104,6 +104,9 @@ func (d *Insert[T]) ON(conflict string) *Insert[T] {
 func (d *Insert[T]) UPDATE(conds map[string]any) *Insert[T] {
 	for k, v := range conds {
 		d.updates = append(d.updates, k)
+		if v == nil {
+			continue
+		}
 		d.args = append(d.args, v)
 	}
 	return d
@@ -126,15 +129,15 @@ func (d *Insert[T]) Exec(ctx context.Context, db *sql.DB) (int64, error) {
 func (d *Insert[T]) SQL() string {
 	var builder strings.Builder
 	builder.WriteString("INSERT INTO " + d.table + " (" + strings.Join(d.cols, ", ") + ") VALUES ")
-	if d.conflict != "" {
-		builder.WriteString("ON" + d.conflict + " UPDATE ")
-		builder.WriteString(strings.Join(d.updates, ", "))
-	}
 	for i := range d.size {
 		builder.WriteString("(" + strings.Repeat("?, ", len(d.cols)-1) + "?)")
 		if i < d.size-1 {
 			builder.WriteString(", ")
 		}
+	}
+	if d.conflict != "" {
+		builder.WriteString(" ON " + d.conflict + " UPDATE ")
+		builder.WriteString(strings.Join(d.updates, ", "))
 	}
 	return builder.String()
 }

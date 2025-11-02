@@ -45,26 +45,26 @@ func selectExamples(db *sql.DB) {
 	fmt.Println("--- SELECT Examples ---")
 
 	// SELECT multiple models
-	// SELECT id, name, age FROM users WHERE age > 25
+	// SELECT id, name, age FROM users WHERE 1 = 1 AND age > 25
 	var rows []*ExampleModel
-	SELECT2(&rows).FROM("users").WHERE(map[string]any{"age > ?": 25}).DryRun(context.Background())
+	SELECT2(&rows).FROM("users").WHERE(map[string]any{"AND age > ?": 25}).DryRun(context.Background())
 
 	// SELECT multiple models of full func
-	// SELECT id, name, age FROM users WHERE age > 25 GROUP BY age HAVING count(*) > 1 ORDER BY age desc LIMIT 10 OFFSET 1
+	// SELECT id, name, age FROM users WHERE 1 = 1 AND age > 25 GROUP BY age HAVING count(*) > 1 ORDER BY age DESC LIMIT 10 OFFSET 1
 	SELECT2(&rows).
 		FROM("users").
-		WHERE(map[string]any{"age > ?": 25}).
+		WHERE(map[string]any{"AND age > ?": 25}).
 		GROUP_BY("age").
 		HAVING("count(*) > 1").
-		ORDER_BY("age desc").
+		ORDER_BY("age DESC").
 		OFFSET(1).
 		LIMIT(10).
 		DryRun(context.Background())
 
 	// Simple SELECT
-	// SELECT id, name, age FROM users WHERE id = 1
+	// SELECT id, name, age FROM users WHERE 1 = 1 AND id = 1
 	row := &ExampleModel{}
-	SELECT1(row).FROM("users").WHERE(map[string]any{"id = ?": 1}).DryRun(context.Background())
+	SELECT1(row).FROM("users").WHERE(map[string]any{"AND id = ?": 1}).DryRun(context.Background())
 
 	// SELECT with aggregate function
 	// SELECT count(*) FROM users
@@ -76,14 +76,14 @@ func selectExamples(db *sql.DB) {
 	SELECT("u.id", "p.product_name").FROM("users u").JOIN("products p").ON("u.id = p.user_id").DryRun(context.Background())
 
 	// SELECT with CTE (Common Table Expression)
-	// WITH user_cte AS (SELECT id, name FROM users WHERE age > 25)
+	// WITH user_cte AS (SELECT id, name FROM users WHERE 1 = 1 AND age > 25)
 	// SELECT id, name FROM user_cte
-	cte := WITH("user_cte").AS(SELECT("id", "name").FROM("users").WHERE(map[string]any{"age > ?": 25}).SQL()).SQL()
+	cte := WITH("user_cte").AS(SELECT("id", "name").FROM("users").WHERE(map[string]any{"AND age > ?": 25}).SQL()).SQL()
 	SELECT("id", "name").FROM("user_cte").CTE(cte).DryRun(context.Background())
 
 	// SELECT with Subquery
-	// SELECT id, name FROM (SELECT id, name FROM users WHERE age > 30) AS old_users
-	subquery := SELECT("id", "name").FROM("users").WHERE(map[string]any{"age > ?": 30}).SQL()
+	// SELECT id, name FROM (SELECT id, name FROM users WHERE 1 = 1 AND age > 30) AS old_users
+	subquery := SELECT("id", "name").FROM("users").WHERE(map[string]any{"AND age > ?": 30}).SQL()
 	SELECT("id", "name").FROM("(" + subquery + ") AS old_users").DryRun(context.Background())
 
 	// JOIN with Subquery
@@ -106,25 +106,29 @@ func insertExamples(db *sql.DB) {
 	// INSERT multiple models
 	// INSERT INTO users (name, age) VALUES (?, ?), (?, ?)
 	INSERT(&ExampleModel{Name: "y", Age: 18}, &ExampleModel{Name: "z", Age: 20}).INTO("users").DryRun(context.Background())
+
+	// INSERT with RETURNING clause
+	// INSERT INTO users (name, age) VALUES ('John Doe', 30) ON DUPLICATE KEY UPDATE name = name
+	INSERT1().INTO("users").COLUMNS("name", "age").VALUES("John Doe", 30).ON("DUPLICATE KEY").UPDATE(map[string]any{"name = name": nil}).DryRun(context.Background())
 }
 
 func updateExamples(db *sql.DB) {
 	fmt.Println("--- UPDATE Examples ---")
 
 	// Simple UPDATE
-	// UPDATE users SET age = ? WHERE name = ?
-	UPDATE("users").SET(map[string]any{"age = ?": 31}).WHERE(map[string]any{"name = ?": "John Doe"}).DryRun(context.Background())
+	// UPDATE users SET age = ? WHERE 1 = 1 AND name = ?
+	UPDATE("users").SET(map[string]any{"age": 31}).WHERE(map[string]any{"AND name = ?": "John Doe"}).DryRun(context.Background())
 
 	// UPDATE from model
-	// UPDATE users SET age = ? WHERE id = ?
+	// UPDATE users SET age = ? WHERE 1 = 1 AND id = ?
 	user := &ExampleModel{ID: 1, Age: 32}
-	UPDATE("users").SET1(user).WHERE(map[string]any{"id = ?": user.ID}).DryRun(context.Background())
+	UPDATE("users").SET1(user).WHERE(map[string]any{"AND id = ?": user.ID}).DryRun(context.Background())
 }
 
 func deleteExamples(db *sql.DB) {
 	fmt.Println("--- DELETE Examples ---")
 
 	// Simple DELETE
-	// DELETE FROM users WHERE name = ?
-	DELETE().FROM("users").WHERE(map[string]any{"name = ?": "John Doe"}).DryRun(context.Background())
+	// DELETE FROM users WHERE 1 = 1 AND name = ?
+	DELETE().FROM("users").WHERE(map[string]any{"AND name = ?": "John Doe"}).DryRun(context.Background())
 }
