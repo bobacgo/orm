@@ -44,11 +44,11 @@ func (m *User) Mapping() []*Mapping {
 ```go
 // Query a single model
 user := &User{}
-SELECT1(user).FROM("users").WHERE(map[string]any{"AND id = ?": 1}).Exec(ctx, db)
+SELECT1(user).FROM("users").WHERE(map[string]any{"AND id = ?": 1}).Query(ctx, db)
 
 // Query multiple models
 var users []*User
-SELECT2(&users).FROM("users").WHERE(map[string]any{"AND age > ?": 25}).Exec(ctx, db)
+SELECT2(&users).FROM("users").WHERE(map[string]any{"AND age > ?": 25}).Query(ctx, db)
 
 // Insert data
 user := &User{Name: "John", Age: 30}
@@ -70,14 +70,14 @@ SELECT("u.id", "p.product_name").
     FROM("users u").
     JOIN("products p").
     ON("u.id = p.user_id").
-    Exec(ctx, db)
+    Query(ctx, db)
 ```
 
 ### Aggregate Functions
 
 ```go
 var count sql.Null[int64]
-SELECT1(COUNT[int64]("*", &count)).FROM("users").Exec(ctx, db)
+SELECT1(COUNT[int64]("*", &count)).FROM("users").Query(ctx, db)
 ```
 
 ### Common Table Expressions (CTE)

@@ -44,11 +44,11 @@ func (m *User) Mapping() []*Mapping {
 ```go
 // 查询单个模型
 user := &User{}
-SELECT1(user).FROM("users").WHERE(map[string]any{"AND id = ?": 1}).Exec(ctx, db)
+SELECT1(user).FROM("users").WHERE(map[string]any{"AND id = ?": 1}).Query(ctx, db)
 
 // 查询多个模型
 var users []*User
-SELECT2(&users).FROM("users").WHERE(map[string]any{"AND age > ?": 25}).Exec(ctx, db)
+SELECT2(&users).FROM("users").WHERE(map[string]any{"AND age > ?": 25}).Query(ctx, db)
 
 // 插入数据
 user := &User{Name: "张三", Age: 30}
@@ -70,14 +70,14 @@ SELECT("u.id", "p.product_name").
     FROM("users u").
     JOIN("products p").
     ON("u.id = p.user_id").
-    Exec(ctx, db)
+    Query(ctx, db)
 ```
 
 ### 聚合函数
 
 ```go
 var count sql.Null[int64]
-SELECT1(COUNT[int64]("*", &count)).FROM("users").Exec(ctx, db)
+SELECT1(COUNT[int64]("*", &count)).FROM("users").Query(ctx, db)
 ```
 
 ### CTE (公共表表达式)
@@ -87,7 +87,7 @@ cte := WITH("user_cte").
     AS(SELECT("id", "name").FROM("users").WHERE(map[string]any{"AND age > ?": 25}).SQL()).
     SQL()
 
-SELECT("id", "name").FROM("user_cte").CTE(cte).Exec(ctx, db)
+SELECT("id", "name").FROM("user_cte").CTE(cte).Query(ctx, db)
 ```
 
 ### 子查询
@@ -98,7 +98,7 @@ subquery := SELECT("id", "name").
     WHERE(map[string]any{"AND age > ?": 30}).
     SQL()
 
-SELECT("id", "name").FROM("(" + subquery + ") AS old_users").Exec(ctx, db)
+SELECT("id", "name").FROM("(" + subquery + ") AS old_users").Query(ctx, db)
 ```
 
 ## 结构体到表的映射
