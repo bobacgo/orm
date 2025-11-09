@@ -2,7 +2,6 @@ package orm
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 )
 
@@ -29,7 +28,7 @@ func SELECT2[T any, P PModel[T]](rows *[]*T) *SelectModels[T, P] {
 	return s
 }
 
-func (d *SelectModels[T, P]) Query(ctx context.Context, db *sql.DB) error {
+func (d *SelectModels[T, P]) Query(ctx context.Context, db Execer) error {
 	if d.err != nil {
 		return d.err
 	}

@@ -3,6 +3,8 @@ package orm
 import (
 	"context"
 	"errors"
+	"maps"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -83,9 +85,10 @@ func (d *selec[T]) WHERE(where map[string]any) *T {
 	if len(where) > 0 {
 		d.where = append(d.where, "1 = 1")
 	}
-	for k, v := range where {
+	keys := slices.Sorted(maps.Keys(where))
+	for _, k := range keys { // 按键排序
 		d.where = append(d.where, k)
-		d.args = append(d.args, v)
+		d.args = append(d.args, where[k])
 	}
 	return d.t
 }

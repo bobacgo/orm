@@ -2,9 +2,10 @@ package orm
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 	"strings"
 )
 
@@ -35,9 +36,10 @@ func (d *Update) SET(set map[string]any) *Update {
 		return d
 	}
 
-	for k, v := range set {
+	keys := slices.Sorted(maps.Keys(set))
+	for _, k := range keys { // 按键排序
 		d.cols = append(d.cols, k)
-		d.args = append(d.args, v)
+		d.args = append(d.args, set[k])
 	}
 	return d
 }
@@ -70,9 +72,11 @@ func (d *Update) WHERE(where map[string]any) *Update {
 	if len(where) > 0 {
 		d.where = append(d.where, "1 = 1")
 	}
-	for k, v := range where {
+	// 按键排序
+	keys := slices.Sorted(maps.Keys(where))
+	for _, k := range keys {
 		d.where = append(d.where, k)
-		d.args = append(d.args, v)
+		d.args = append(d.args, where[k])
 	}
 	return d
 }
@@ -82,7 +86,7 @@ func (d *Update) SQL() string {
 	return sqlText
 }
 
-func (d *Update) Exec(ctx context.Context, db *sql.DB) (int64, error) {
+func (d *Update) Exec(ctx context.Context, db Execer) (int64, error) {
 	if d.err != nil {
 		return 0, d.err
 	}

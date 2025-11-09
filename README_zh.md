@@ -101,6 +101,23 @@ subquery := SELECT("id", "name").
 SELECT("id", "name").FROM("(" + subquery + ") AS old_users").Query(ctx, db)
 ```
 
+### 事务处理
+
+```go
+tx := Tx(func(ctx context.Context, tx *sql.Tx) error {
+    if _, err := UPDATE("users").SET(map[string]any{"balance": 30}).WHERE(map[string]any{"AND name = ?": "Jane Doe"}).Exec(ctx, tx); err != nil {
+        return fmt.Errorf("UPDATE Jane Doe : %w", err)
+    }
+    if _, err := UPDATE("users").SET(map[string]any{"balance": 0}).WHERE(map[string]any{"AND name = ?": "John Doe"}).Exec(ctx, tx); err != nil {
+        return fmt.Errorf("UPDATE John Doe : %w", err)
+    }
+    return nil
+})
+if err := tx.Exec(context.Background(), db); err != nil {
+    slog.Error("tx.Do", "err", err)
+}
+```
+
 ## 结构体到表的映射
 
 本 ORM 提供了 Go 结构体与数据库表之间的灵活映射系统：

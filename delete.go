@@ -2,8 +2,9 @@ package orm
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
+	"maps"
+	"slices"
 	"strings"
 )
 
@@ -37,9 +38,11 @@ func (d *Delete) WHERE(where map[string]any) *Delete {
 	if len(where) > 0 {
 		d.where = append(d.where, "1 = 1")
 	}
-	for k, v := range where {
+
+	keys := slices.Sorted(maps.Keys(where))
+	for _, k := range keys { // 按键排序
 		d.where = append(d.where, k)
-		d.args = append(d.args, v)
+		d.args = append(d.args, where[k])
 	}
 	return d
 }
@@ -49,7 +52,7 @@ func (d *Delete) SQL() string {
 	return sqlText
 }
 
-func (d *Delete) Exec(ctx context.Context, db *sql.DB) (int64, error) {
+func (d *Delete) Exec(ctx context.Context, db Execer) (int64, error) {
 	// 检查是否有错误
 	if d.err != nil {
 		return 0, d.err

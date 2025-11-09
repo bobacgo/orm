@@ -2,8 +2,9 @@ package orm
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
+	"maps"
+	"slices"
 	"strings"
 )
 
@@ -102,17 +103,17 @@ func (d *Insert[T]) ON(conflict string) *Insert[T] {
 }
 
 func (d *Insert[T]) UPDATE(conds map[string]any) *Insert[T] {
-	for k, v := range conds {
+	keys := slices.Sorted(maps.Keys(conds))
+	for _, k := range keys { // 按键排序
 		d.updates = append(d.updates, k)
-		if v == nil {
-			continue
+		if v := conds[k]; v != nil {
+			d.args = append(d.args, v)
 		}
-		d.args = append(d.args, v)
 	}
 	return d
 }
 
-func (d *Insert[T]) Exec(ctx context.Context, db *sql.DB) (int64, error) {
+func (d *Insert[T]) Exec(ctx context.Context, db Execer) (int64, error) {
 	if d.err != nil {
 		return 0, d.err
 	}

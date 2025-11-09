@@ -2,7 +2,6 @@ package orm
 
 import (
 	"context"
-	"database/sql"
 )
 
 type SelectModel struct {
@@ -23,7 +22,7 @@ func SELECT1(row Model) *SelectModel {
 	return s
 }
 
-func (d *SelectModel) Query(ctx context.Context, db *sql.DB) error {
+func (d *SelectModel) Query(ctx context.Context, db Execer) error {
 	if d.err != nil {
 		return d.err
 	}
