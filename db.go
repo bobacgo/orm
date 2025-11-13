@@ -37,19 +37,19 @@ func expandInClause(clause string, value any) (string, []any) {
 	if !strings.Contains(lowerClause, "in (?)") {
 		return clause, []any{value}
 	}
-	
+
 	// Check if the value is a string
 	strValue, ok := value.(string)
 	if !ok {
 		return clause, []any{value}
 	}
-	
+
 	// Split the comma-separated string
 	parts := strings.Split(strValue, ",")
 	if len(parts) <= 1 {
 		return clause, []any{value}
 	}
-	
+
 	// Create the new placeholders
 	placeholders := make([]string, len(parts))
 	values := make([]any, len(parts))
@@ -57,9 +57,9 @@ func expandInClause(clause string, value any) (string, []any) {
 		placeholders[i] = "?"
 		values[i] = strings.TrimSpace(part)
 	}
-	
+
 	// Replace "(?)" with "(?,?,?...)"
 	newClause := strings.Replace(clause, "(?)", "("+strings.Join(placeholders, ",")+")", 1)
-	
+
 	return newClause, values
 }
