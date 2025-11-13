@@ -75,8 +75,9 @@ func (d *Update) WHERE(where map[string]any) *Update {
 	// 按键排序
 	keys := slices.Sorted(maps.Keys(where))
 	for _, k := range keys {
-		d.where = append(d.where, k)
-		d.args = append(d.args, where[k])
+		expandedClause, values := expandInClause(k, where[k])
+		d.where = append(d.where, expandedClause)
+		d.args = append(d.args, values...)
 	}
 	return d
 }

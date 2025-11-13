@@ -41,8 +41,9 @@ func (d *Delete) WHERE(where map[string]any) *Delete {
 
 	keys := slices.Sorted(maps.Keys(where))
 	for _, k := range keys { // 按键排序
-		d.where = append(d.where, k)
-		d.args = append(d.args, where[k])
+		expandedClause, values := expandInClause(k, where[k])
+		d.where = append(d.where, expandedClause)
+		d.args = append(d.args, values...)
 	}
 	return d
 }

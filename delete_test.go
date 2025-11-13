@@ -25,6 +25,16 @@ func TestDelete_SQL(t *testing.T) {
 			build: DELETE().FROM("").WHERE(map[string]any{"AND id = ?": 1}),
 			want:  "DELETE FROM  WHERE 1 = 1 AND id = ?",
 		},
+		{
+			name:  "delete with IN clause - comma-separated string",
+			build: DELETE().FROM("users").WHERE(map[string]any{"id in (?)": "1,2,3"}),
+			want:  "DELETE FROM users WHERE 1 = 1 id in (?,?,?)",
+		},
+		{
+			name:  "delete with AND and IN clause",
+			build: DELETE().FROM("users").WHERE(map[string]any{"AND id in (?)": "7,8,9"}),
+			want:  "DELETE FROM users WHERE 1 = 1 AND id in (?,?,?)",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

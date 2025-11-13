@@ -37,6 +37,16 @@ func TestUpdate_SQL(t *testing.T) {
 			build: UPDATE("users").SET1(&testUpdateModel{Name: "Tom"}).WHERE(map[string]any{"AND id = ?": 1}),
 			want:  "UPDATE users SET name = ? WHERE 1 = 1 AND id = ?",
 		},
+		{
+			name:  "update with IN clause - comma-separated string",
+			build: UPDATE("users").SET(map[string]any{"status": "active"}).WHERE(map[string]any{"id in (?)": "1,2,3"}),
+			want:  "UPDATE users SET status = ? WHERE 1 = 1 id in (?,?,?)",
+		},
+		{
+			name:  "update with AND and IN clause",
+			build: UPDATE("users").SET(map[string]any{"status": "inactive"}).WHERE(map[string]any{"AND id in (?)": "5,10,15"}),
+			want:  "UPDATE users SET status = ? WHERE 1 = 1 AND id in (?,?,?)",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -77,6 +77,16 @@ func TestSelectString_SQL(t *testing.T) {
 			builder: SELECT("id", "name").FROM("users").WHERE(map[string]any{"id = ?": 1}).GROUP_BY("id").HAVING("id > 0").ORDER_BY("id DESC").LIMIT(10).OFFSET(10),
 			want:    "SELECT id,name FROM users WHERE 1 = 1 id = ? GROUP BY id HAVING id > 0 ORDER BY id DESC LIMIT 10 OFFSET 10",
 		},
+		{
+			name:    "query with IN clause - comma-separated string",
+			builder: SELECT("id", "name").FROM("users").WHERE(map[string]any{"id in (?)": "1,2,3"}),
+			want:    "SELECT id,name FROM users WHERE 1 = 1 id in (?,?,?)",
+		},
+		{
+			name:    "query with AND and IN clause",
+			builder: SELECT("id", "name").FROM("users").WHERE(map[string]any{"AND id in (?)": "10,20,30"}),
+			want:    "SELECT id,name FROM users WHERE 1 = 1 AND id in (?,?,?)",
+		},
 	}
 
 	for _, tt := range tests {
