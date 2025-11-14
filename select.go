@@ -86,7 +86,7 @@ func (d *selec[T]) WHERE(where map[string]any) *T {
 
 	cds, vs := _where(where)
 	d.where = append(d.where, cds...)
-	d.args = append(d.args, vs)
+	d.args = append(d.args, vs...)
 	return d.t
 }
 
