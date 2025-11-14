@@ -3,8 +3,6 @@ package orm
 import (
 	"context"
 	"fmt"
-	"maps"
-	"slices"
 	"strings"
 )
 
@@ -103,13 +101,9 @@ func (d *Insert[T]) ON(conflict string) *Insert[T] {
 }
 
 func (d *Insert[T]) UPDATE(conds map[string]any) *Insert[T] {
-	keys := slices.Sorted(maps.Keys(conds))
-	for _, k := range keys { // 按键排序
-		d.updates = append(d.updates, k)
-		if v := conds[k]; v != nil {
-			d.args = append(d.args, v)
-		}
-	}
+	cds, vs := _where(conds)
+	d.updates = append(d.updates, cds...)
+	d.args = append(d.args, vs...)
 	return d
 }
 

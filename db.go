@@ -3,6 +3,8 @@ package orm
 import (
 	"context"
 	"database/sql"
+	"maps"
+	"slices"
 )
 
 type dbCommon struct {
@@ -26,4 +28,16 @@ type Mapping struct {
 	Column string
 	Result any // query result (pointer)
 	Value  any // insert, update value
+}
+
+func _where(m M) ([]string, []any) {
+	cds, vs := make([]string, 0, len(m)), make([]any, 0)
+	keys := slices.Sorted(maps.Keys(m))
+	for _, k := range keys { // 按键排序
+		cds = append(cds, k)
+		if v := m[k]; v != nil { // 没有占位符
+			vs = append(vs, m[k])
+		}
+	}
+	return cds, vs
 }

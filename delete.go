@@ -3,8 +3,6 @@ package orm
 import (
 	"context"
 	"fmt"
-	"maps"
-	"slices"
 	"strings"
 )
 
@@ -39,11 +37,9 @@ func (d *Delete) WHERE(where map[string]any) *Delete {
 		d.where = append(d.where, "1 = 1")
 	}
 
-	keys := slices.Sorted(maps.Keys(where))
-	for _, k := range keys { // 按键排序
-		d.where = append(d.where, k)
-		d.args = append(d.args, where[k])
-	}
+	cds, vs := _where(where)
+	d.where = append(d.where, cds...)
+	d.args = append(d.args, vs...)
 	return d
 }
 
