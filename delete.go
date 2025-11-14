@@ -33,10 +33,6 @@ func (d *Delete) FROM(table string) *Delete {
 }
 
 func (d *Delete) WHERE(where map[string]any) *Delete {
-	if len(where) > 0 {
-		d.where = append(d.where, "1 = 1")
-	}
-
 	cds, vs := d.excludeNil(where)
 	d.where = append(d.where, cds...)
 	d.args = append(d.args, vs...)

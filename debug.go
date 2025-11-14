@@ -20,6 +20,8 @@ func (c *dbCommon) print(ctx context.Context, sqlText string) {
 			sqlText = strings.Replace(sqlText, "?", fmt.Sprintf("'%s'", v), 1)
 		case bool:
 			sqlText = strings.Replace(sqlText, "?", fmt.Sprintf("%t", v), 1)
+		case nil:
+			sqlText = strings.Replace(sqlText, "?", "NULL", 1)
 		default:
 			sqlText = strings.Replace(sqlText, "?", fmt.Sprintf("%v", v), 1)
 		}

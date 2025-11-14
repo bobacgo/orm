@@ -25,17 +25,17 @@ func TestUpdate_SQL(t *testing.T) {
 		{
 			name:  "basic update",
 			build: UPDATE("users").SET(map[string]any{"name": "Tom"}).WHERE(map[string]any{"AND id = ?": 1}),
-			want:  "UPDATE users SET name = ? WHERE 1 = 1 AND id = ?",
+			want:  "UPDATE users SET name = ? WHERE id = ?",
 		},
 		{
 			name:  "update with multiple columns",
 			build: UPDATE("users").SET(map[string]any{"name": "Tom", "age": 18}).WHERE(map[string]any{"AND id = ?": 1}),
-			want:  "UPDATE users SET name = ?, age = ? WHERE 1 = 1 AND id = ?",
+			want:  "UPDATE users SET age = ?, name = ? WHERE id = ?",
 		},
 		{
 			name:  "update with model",
-			build: UPDATE("users").SET1(&testUpdateModel{Name: "Tom"}).WHERE(map[string]any{"AND id = ?": 1}),
-			want:  "UPDATE users SET name = ? WHERE 1 = 1 AND id = ?",
+			build: UPDATE("users").SET1(&testUpdateModel{Name: "Tom"}).WHERE(map[string]any{"AND id = ?": 1}).Omit("id"),
+			want:  "UPDATE users SET name = ? WHERE id = ?",
 		},
 	}
 	for _, tt := range tests {

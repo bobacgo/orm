@@ -26,17 +26,17 @@ func TestInsert_SQL(t *testing.T) {
 	}{
 		{
 			name:  "basic insert",
-			build: INSERT(&testInsertModel{Name: "Tom", Age: 18}).INTO("users"),
+			build: INSERT(&testInsertModel{Name: "Tom", Age: 18}).INTO("users").Omit("id"),
 			want:  "INSERT INTO users (name, age) VALUES (?, ?)",
 		},
 		{
 			name:  "insert multiple models",
-			build: INSERT(&testInsertModel{Name: "y", Age: 18}, &testInsertModel{Name: "z", Age: 20}).INTO("users"),
+			build: INSERT(&testInsertModel{Name: "y", Age: 18}, &testInsertModel{Name: "z", Age: 20}).INTO("users").Omit("id"),
 			want:  "INSERT INTO users (name, age) VALUES (?, ?), (?, ?)",
 		},
 		{
 			name:  "insert with columns and values",
-			build: INSERT[*testInsertModel]().INTO("users").COLUMNS("name", "age").VALUES("y", 18),
+			build: INSERT[*testInsertModel]().INTO("users").COLUMNS("name", "age").VALUES("y", 18).Omit("id"),
 			want:  "INSERT INTO users (name, age) VALUES (?, ?)",
 		},
 	}

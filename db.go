@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"maps"
 	"slices"
+	"strings"
 )
 
 // sql.DB | sql.Tx
@@ -32,12 +33,22 @@ type dbCommon struct {
 
 func (c *dbCommon) excludeNil(m M) ([]string, []any) {
 	cds, vs := make([]string, 0, len(m)), make([]any, 0)
+	if len(m) == 0 {
+		return cds, vs
+	}
+
+	// 按键排序
 	keys := slices.Sorted(maps.Keys(m))
-	for _, k := range keys { // 按键排序
+	for _, k := range keys {
 		cds = append(cds, k)
-		if v := m[k]; v != nil { // 没有占位符
+		// nil 表示没有占位符
+		if v := m[k]; v != nil {
 			vs = append(vs, m[k])
 		}
+	}
+	if len(cds) > 0 {
+		// 移除第一个条件的 AND/OR
+		cds[0] = strings.TrimPrefix(strings.TrimPrefix(cds[0], "AND "), "OR ")
 	}
 	return cds, vs
 }

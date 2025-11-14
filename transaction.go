@@ -30,9 +30,9 @@ func (t *Transaction) Exec(ctx context.Context, db *sql.DB) (err error) {
 	}
 
 	defer func() {
-		if err != nil { // rollback only if error occurs
-			if err = tx.Rollback(); err != nil {
-				slog.Error(fmt.Sprintf("tx.Rollback() err: %v", err))
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				slog.Error(fmt.Sprintf("tx.Rollback() err: %v", rbErr))
 			}
 		}
 	}()

@@ -24,6 +24,7 @@ type selec[T any] struct {
 	offset   int64
 	union    string
 	unionAll string
+	forLock  string // 查询语法锁 例如： "FOR UPDATE、FOR SHARE、FOR JSON"
 }
 
 func (d *selec[T]) setT(t *T) {
@@ -86,10 +87,6 @@ func (d *selec[T]) ON(condition string) *T {
 }
 
 func (d *selec[T]) WHERE(where map[string]any) *T {
-	if len(where) > 0 {
-		d.where = append(d.where, "1 = 1")
-	}
-
 	cds, vs := d.excludeNil(where)
 	d.where = append(d.where, cds...)
 	d.args = append(d.args, vs...)
@@ -136,6 +133,11 @@ func (d *selec[T]) CTE(cte string) *T {
 	return d.t
 }
 
+func (d *selec[T]) FOR(lock string) *T {
+	d.forLock = lock
+	return d.t
+}
+
 func (d *selec[T]) SQL() string {
 	var sb strings.Builder
 	// 公共表达式
@@ -176,6 +178,10 @@ func (d *selec[T]) SQL() string {
 	}
 	if d.unionAll != "" {
 		sb.WriteString(" UNION ALL " + d.unionAll)
+	}
+
+	if d.forLock != "" {
+		sb.WriteString(" FOR " + d.forLock)
 	}
 
 	return sb.String()

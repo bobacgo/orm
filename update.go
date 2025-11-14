@@ -70,17 +70,10 @@ func (d *Update) SET1(row Model) *Update {
 		d.cols = append(d.cols, v.Column)
 		d.upval = append(d.upval, v.Value)
 	}
-
-	if len(d.cols) == 0 { // 没有更新字段
-		return d
-	}
 	return d
 }
 
 func (d *Update) WHERE(where map[string]any) *Update {
-	if len(where) > 0 {
-		d.where = append(d.where, "1 = 1")
-	}
 	cds, vs := d.excludeNil(where)
 	d.where = append(d.where, cds...)
 	d.args = append(d.args, vs...)

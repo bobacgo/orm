@@ -46,36 +46,40 @@ func TestSelectString_SQL(t *testing.T) {
 			builder: SELECT("id", "name").FROM("users").CROSS_JOIN("orders").ON("users.id = orders.user_id"),
 			want:    "SELECT id,name FROM users CROSS JOIN orders ON users.id = orders.user_id",
 		},
-
 		{
 			name:    "query with where",
 			builder: SELECT("id", "name").FROM("users").WHERE(map[string]any{"id = ?": 1}),
-			want:    "SELECT id,name FROM users WHERE 1 = 1 id = ?",
+			want:    "SELECT id,name FROM users WHERE id = ?",
 		},
 		{
 			name:    "query with group by",
 			builder: SELECT("id", "name").FROM("users").WHERE(map[string]any{"id = ?": 1}).GROUP_BY("id"),
-			want:    "SELECT id,name FROM users WHERE 1 = 1 id = ? GROUP BY id",
+			want:    "SELECT id,name FROM users WHERE id = ? GROUP BY id",
 		},
 		{
 			name:    "query with having",
 			builder: SELECT("id", "name").FROM("users").WHERE(map[string]any{"id = ?": 1}).GROUP_BY("id").HAVING("id > 0"),
-			want:    "SELECT id,name FROM users WHERE 1 = 1 id = ? GROUP BY id HAVING id > 0",
+			want:    "SELECT id,name FROM users WHERE id = ? GROUP BY id HAVING id > 0",
 		},
 		{
 			name:    "query with order by",
 			builder: SELECT("id", "name").FROM("users").WHERE(map[string]any{"id = ?": 1}).GROUP_BY("id").HAVING("id > 0").ORDER_BY("id DESC"),
-			want:    "SELECT id,name FROM users WHERE 1 = 1 id = ? GROUP BY id HAVING id > 0 ORDER BY id DESC",
+			want:    "SELECT id,name FROM users WHERE id = ? GROUP BY id HAVING id > 0 ORDER BY id DESC",
 		},
 		{
 			name:    "query with limit",
 			builder: SELECT("id", "name").FROM("users").WHERE(map[string]any{"id = ?": 1}).GROUP_BY("id").HAVING("id > 0").ORDER_BY("id DESC").LIMIT(10),
-			want:    "SELECT id,name FROM users WHERE 1 = 1 id = ? GROUP BY id HAVING id > 0 ORDER BY id DESC LIMIT 10",
+			want:    "SELECT id,name FROM users WHERE id = ? GROUP BY id HAVING id > 0 ORDER BY id DESC LIMIT 10",
 		},
 		{
 			name:    "query with offset",
 			builder: SELECT("id", "name").FROM("users").WHERE(map[string]any{"id = ?": 1}).GROUP_BY("id").HAVING("id > 0").ORDER_BY("id DESC").LIMIT(10).OFFSET(10),
-			want:    "SELECT id,name FROM users WHERE 1 = 1 id = ? GROUP BY id HAVING id > 0 ORDER BY id DESC LIMIT 10 OFFSET 10",
+			want:    "SELECT id,name FROM users WHERE id = ? GROUP BY id HAVING id > 0 ORDER BY id DESC LIMIT 10 OFFSET 10",
+		},
+		{
+			name:    "query lock for update",
+			builder: SELECT("id", "name").FROM("users").WHERE(map[string]any{"id = ?": 1}).FOR("UPDATE"),
+			want:    "SELECT id,name FROM users WHERE id = ? FOR UPDATE",
 		},
 	}
 
@@ -98,7 +102,7 @@ func TestSelectCTE_SQL(t *testing.T) {
 		{
 			name:    "query with cte",
 			builder: SELECT("id", "name").FROM("users").CTE(WITH("user_cte").AS(SELECT("id", "name").FROM("users").WHERE(map[string]any{"AND age > ?": 25}).SQL()).SQL()),
-			want:    "WITH user_cte AS (SELECT id,name FROM users WHERE 1 = 1 AND age > ?)\nSELECT id,name FROM users",
+			want:    "WITH user_cte AS (SELECT id,name FROM users WHERE age > ?)\nSELECT id,name FROM users",
 		},
 	}
 
@@ -121,7 +125,7 @@ func TestSelectModel_SQL(t *testing.T) {
 		{
 			name:    "query with model",
 			builder: SELECT1(&ExampleModel{}).FROM("users").WHERE(map[string]any{"AND age > ?": 25}),
-			want:    "SELECT id,name,age FROM users WHERE 1 = 1 AND age > ?",
+			want:    "SELECT id,name,age FROM users WHERE age > ?",
 		},
 	}
 
@@ -144,7 +148,7 @@ func TestSelectModels_SQL(t *testing.T) {
 		{
 			name:    "query with models",
 			builder: SELECT2(&[]*ExampleModel{}).FROM("users").WHERE(map[string]any{"AND age > ?": 25}),
-			want:    "SELECT id,name,age FROM users WHERE 1 = 1 AND age > ?",
+			want:    "SELECT id,name,age FROM users WHERE age > ?",
 		},
 	}
 

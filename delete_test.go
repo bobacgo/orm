@@ -13,17 +13,17 @@ func TestDelete_SQL(t *testing.T) {
 		{
 			name:  "basic delete with where",
 			build: DELETE().FROM("users").WHERE(map[string]any{"AND id = ?": 1}),
-			want:  "DELETE FROM users WHERE 1 = 1 AND id = ?",
+			want:  "DELETE FROM users WHERE id = ?",
 		},
 		{
 			name:  "delete with multiple conditions",
 			build: DELETE().FROM("users").WHERE(map[string]any{"AND id = ?": 1, "AND name = ?": "Tom"}),
-			want:  "DELETE FROM users WHERE 1 = 1 AND id = ? AND name = ?",
+			want:  "DELETE FROM users WHERE id = ? AND name = ?",
 		},
 		{
 			name:  "table name empty",
 			build: DELETE().FROM("").WHERE(map[string]any{"AND id = ?": 1}),
-			want:  "DELETE FROM  WHERE 1 = 1 AND id = ?",
+			want:  "DELETE FROM  WHERE id = ?",
 		},
 	}
 	for _, tt := range tests {
