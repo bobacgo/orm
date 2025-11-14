@@ -7,15 +7,6 @@ import (
 	"slices"
 )
 
-type dbCommon struct {
-	debug bool
-	err   error
-
-	//sql   string // 需要执行的 sql 语句
-	table string // 表名
-	args  []any  // 占位符对应参数
-}
-
 // sql.DB | sql.Tx
 type Execer interface {
 	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
@@ -30,7 +21,16 @@ type Mapping struct {
 	Value  any // insert, update value
 }
 
-func _where(m M) ([]string, []any) {
+type dbCommon struct {
+	debug bool
+	err   error
+
+	//sql   string // 需要执行的 sql 语句
+	table string // 表名
+	args  []any  // 占位符对应参数
+}
+
+func (c *dbCommon) excludeNil(m M) ([]string, []any) {
 	cds, vs := make([]string, 0, len(m)), make([]any, 0)
 	keys := slices.Sorted(maps.Keys(m))
 	for _, k := range keys { // 按键排序
@@ -40,4 +40,17 @@ func _where(m M) ([]string, []any) {
 		}
 	}
 	return cds, vs
+}
+
+func (d *dbCommon) omitCol(omitcols, cols []string, val []any) ([]string, []any) {
+	// 如果后面调用 Omit 方法，忽略更新字段
+	newcols, newval := make([]string, 0), make([]any, 0)
+	for i, cl := range cols {
+		if slices.Contains(omitcols, cl) {
+			continue
+		}
+		newcols = append(newcols, cl)
+		newval = append(newval, val[i])
+	}
+	return newcols, newval
 }

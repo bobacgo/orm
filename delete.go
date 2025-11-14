@@ -37,7 +37,7 @@ func (d *Delete) WHERE(where map[string]any) *Delete {
 		d.where = append(d.where, "1 = 1")
 	}
 
-	cds, vs := _where(where)
+	cds, vs := d.excludeNil(where)
 	d.where = append(d.where, cds...)
 	d.args = append(d.args, vs...)
 	return d

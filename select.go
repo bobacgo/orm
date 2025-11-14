@@ -35,6 +35,12 @@ func (d *selec[T]) Debug() *T {
 	return d.t
 }
 
+// Omit 忽略查询字段
+func (d *selec[T]) Omit(cols ...string) *T {
+	d.cols, d.res = d.omitCol(cols, d.cols, d.res)
+	return d.t
+}
+
 // select a, b from ab where a = 1 group by a order by a limit 1, 2
 
 func (d *selec[T]) FROM(table string) *T {
@@ -84,7 +90,7 @@ func (d *selec[T]) WHERE(where map[string]any) *T {
 		d.where = append(d.where, "1 = 1")
 	}
 
-	cds, vs := _where(where)
+	cds, vs := d.excludeNil(where)
 	d.where = append(d.where, cds...)
 	d.args = append(d.args, vs...)
 	return d.t

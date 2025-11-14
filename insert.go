@@ -32,6 +32,12 @@ func (d *Insert[T]) Debug() *Insert[T] {
 	return d
 }
 
+// Omit 忽略更新字段
+func (d *Insert[T]) Omit(cols ...string) *Insert[T] {
+	d.cols, d.args = d.omitCol(cols, d.cols, d.args)
+	return d
+}
+
 // insert into ab (a, b) values (?, ?)
 
 func (d *Insert[T]) insert(rows []T) {
@@ -40,9 +46,6 @@ func (d *Insert[T]) insert(rows []T) {
 		d.size = 1
 		mapping := rows[0].Mapping()
 		for _, v := range mapping {
-			if v.Column == "id" {
-				continue
-			}
 			d.cols = append(d.cols, v.Column)
 			d.args = append(d.args, v.Value)
 		}
@@ -51,9 +54,6 @@ func (d *Insert[T]) insert(rows []T) {
 		for i, row := range rows {
 			mapping := row.Mapping()
 			for _, v := range mapping {
-				if v.Column == "id" {
-					continue
-				}
 				if i == 0 {
 					d.cols = append(d.cols, v.Column)
 				}
@@ -101,7 +101,7 @@ func (d *Insert[T]) ON(conflict string) *Insert[T] {
 }
 
 func (d *Insert[T]) UPDATE(conds map[string]any) *Insert[T] {
-	cds, vs := _where(conds)
+	cds, vs := d.excludeNil(conds)
 	d.updates = append(d.updates, cds...)
 	d.args = append(d.args, vs...)
 	return d
