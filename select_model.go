@@ -10,7 +10,7 @@ type SelectModel struct {
 
 func SELECT1(row Model) *SelectModel {
 	s := &SelectModel{
-		&selec[SelectModel]{
+		selec: &selec[SelectModel]{
 			dbCommon: dbCommon{},
 		},
 	}
@@ -28,5 +28,15 @@ func (d *SelectModel) Query(ctx context.Context, db Execer) error {
 	}
 	sqlText := d.SQL()
 	d.debugPrint(ctx, sqlText)
-	return db.QueryRowContext(ctx, sqlText, d.args...).Scan(d.res...)
+
+	// 为每个字段创建对应的 sql.Null* 类型用于扫描
+	nullableRes := createNullableRes(d.res)
+
+	if err := db.QueryRowContext(ctx, sqlText, d.args...).Scan(nullableRes...); err != nil {
+		return err
+	}
+
+	// 将扫描结果从 sql.Null* 类型转换回原始类型
+	unwrapNullableRes(nullableRes, d.res)
+	return nil
 }

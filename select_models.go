@@ -42,9 +42,16 @@ func (d *SelectModels[T, P]) Query(ctx context.Context, db Execer) error {
 	defer rows.Close()
 
 	for rows.Next() {
-		if err = rows.Scan(d.res...); err != nil {
+		// 为每一行创建可空类型的扫描结果
+		nullableRes := createNullableRes(d.res)
+
+		if err = rows.Scan(nullableRes...); err != nil {
 			return fmt.Errorf("rows.Scan: %w", err)
 		}
+
+		// 将扫描结果从 sql.Null* 类型转换回原始类型
+		unwrapNullableRes(nullableRes, d.res)
+
 		cp := *d.row
 		*d.rows = append(*d.rows, &cp)
 	}
