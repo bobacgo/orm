@@ -123,7 +123,7 @@ func (d *Insert[T]) Exec(ctx context.Context, db Execer) (int64, error) {
 
 func (d *Insert[T]) SQL() string {
 	var builder strings.Builder
-	builder.WriteString("INSERT INTO " + quote(d.table) + " (" + strings.Join(quoteSlice(d.cols), ", ") + ") VALUES ")
+	builder.WriteString("INSERT INTO " + d.table + " (" + strings.Join(d.cols, ", ") + ") VALUES ")
 	for i := range d.size {
 		builder.WriteString("(" + strings.Repeat("?, ", len(d.cols)-1) + "?)")
 		if i < d.size-1 {
@@ -132,7 +132,7 @@ func (d *Insert[T]) SQL() string {
 	}
 	if d.conflict != "" {
 		builder.WriteString(" ON " + d.conflict + " UPDATE ")
-		builder.WriteString(strings.Join(quoteSlice(d.updates), ", "))
+		builder.WriteString(strings.Join(d.updates, ", "))
 	}
 	return builder.String()
 }

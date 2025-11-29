@@ -83,7 +83,7 @@ func (d *Update) WHERE(where map[string]any) *Update {
 func (d *Update) SQL() string {
 	d.args = append(d.upval, d.args...)
 
-	sqlText := "UPDATE " + quote(d.table) + " SET " + strings.Join(quoteSlice(d.cols), " = ?, ") + " = ? WHERE " + strings.Join(d.where, " ")
+	sqlText := "UPDATE " + d.table + " SET " + strings.Join(d.cols, " = ?, ") + " = ? WHERE " + strings.Join(d.where, " ")
 	return sqlText
 }
 
