@@ -65,3 +65,20 @@ func (d *dbCommon) omitCol(omitcols, cols []string, val []any) ([]string, []any)
 	}
 	return newcols, newval
 }
+
+// quote 为字段名和表名添加反引号
+func quote(name string) string {
+	if name == "" {
+		return name
+	}
+	return "`" + name + "`"
+}
+
+// quoteSlice 为字符串切片中的每个字段名添加反引号
+func quoteSlice(names []string) []string {
+	quoted := make([]string, len(names))
+	for i, name := range names {
+		quoted[i] = quote(name)
+	}
+	return quoted
+}

@@ -145,7 +145,7 @@ func (d *selec[T]) SQL() string {
 		sb.WriteString(d.cte)
 	}
 	// 构建查询语句
-	sb.WriteString("SELECT " + strings.Join(d.cols, ",") + " FROM " + d.table)
+	sb.WriteString("SELECT " + strings.Join(quoteSlice(d.cols), ",") + " FROM " + quote(d.table))
 
 	for i, join := range d.joins {
 		sb.WriteString(" " + join)
@@ -158,7 +158,7 @@ func (d *selec[T]) SQL() string {
 		sb.WriteString(" WHERE " + strings.Join(d.where, " "))
 	}
 	if len(d.groupBy) > 0 {
-		sb.WriteString(" GROUP BY " + strings.Join(d.groupBy, ", "))
+		sb.WriteString(" GROUP BY " + strings.Join(quoteSlice(d.groupBy), ", "))
 	}
 	if d.having != "" {
 		sb.WriteString(" HAVING " + d.having)

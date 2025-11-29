@@ -40,7 +40,7 @@ func (d *Delete) WHERE(where map[string]any) *Delete {
 }
 
 func (d *Delete) SQL() string {
-	sqlText := "DELETE FROM " + d.table + " WHERE " + strings.Join(d.where, " ")
+	sqlText := "DELETE FROM " + quote(d.table) + " WHERE " + strings.Join(d.where, " ")
 	return sqlText
 }
 
